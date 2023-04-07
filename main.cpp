@@ -293,6 +293,8 @@ void Input() {
 
 int main() {
 	srand(233);
+	cout << rand();
+	return 0;
     Input();
 
 	Answer final_ans;
