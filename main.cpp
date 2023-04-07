@@ -159,22 +159,38 @@ struct graph {
 	}
 	
 	bool vis[MAXN];
-	int f[MAXN];
+	cost_t f[MAXN];
+	struct node {
+		int v;
+		cost_t f;
+		node(int _v, cost_t _f):v(_v), f(_f) { }
+		bool operator < (const node &rhs)const {
+			return f > rhs.f;
+		}
+	};
 	cost_t bfs_least_new_edge(int s, int t, cost_t threshold) {
 		memset(vis, 0, sizeof(vis));
-		queue<int>q;
-		q.push(s);
-		vis[s] = 1;
+		memset(f, 0x3f, sizeof(f));
 		f[s] = 0;
+		priority_queue<node>q;
+		q.push(node(s, f[s]));
+
 		while (!q.empty()) {
-			int v = q.front();
+			int v = q.top().v;
 			q.pop();
+			if (vis[v]) continue ;
+			vis[v] = 1;
+			if (f[v] > threshold) continue;
 			for (auto &e: des[v]) {
-				if (vis[e.to]) continue ;
-				vis[e.to] = 1;
-				f[e.to] = f[v] + (occupied[e.id] == 1);
-				q.push(e.to);
-				trace[e.to] = trace_entry(v, e.id);
+				int to = e.to;
+				// cout << "to = " << to << ' ' << vis[to] << ' ' << f[v] << ' ' << f[to] << '\n';
+				if (vis[to]) continue ;
+				cost_t val = f[v] + e.d + (occupied[e.id] == 1) * NEW_EDGE_COST;
+				if (val < f[to]) {
+					trace[to] = trace_entry(v, e.id);
+					f[to] = val;
+					q.push(node(to, f[to]));
+				}
 			}
 		}
 		return f[t];
@@ -229,7 +245,7 @@ struct graph_manageer {
 			ans = BIGCOST;
 
 			int bg = lst + rand();
-			for (int j=0; j<min(P, 20); j++) {
+			for (int j=0; j<min(P, 50); j++) {
 				int c = (bg + j) % P;
 				cost_t tem = gr[c].bfs_least_new_edge(bs.s, bs.t, ans);
 				if (tem < ans) {
