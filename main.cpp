@@ -264,21 +264,6 @@ struct graph_manageer {
 
 }gm;
 
-
-int f[MAXN];
-int Getf(int v) {
-	return v == f[v] ? v : f[v] = Getf(f[v]);
-}
-bool bcj() {
-	for (auto e: edges) {
-		f[Getf(e.s)] = Getf(e.t);
-	}
-	for (auto b: businesses) {
-		if (Getf(b.s) != Getf(b.t)) exit(-1);
-	}
-	return 1;
-}
-
 void Input() {
 	scanf("%d%d%d%d%d", &N, &M, &T, &P, &D);
 	int s, t, d;
