@@ -16,6 +16,7 @@ const int MAXP = 80;
 const int MAX_NEW_EDGE_NUM = 20000;
 
 int N, M, T, P, D;
+random_device global_rd;
 
 struct edge {
     int s, t;
@@ -168,7 +169,7 @@ struct graph {
 			return f > rhs.f;
 		}
 	};
-	cost_t bfs_least_new_edge(int s, int t, cost_t threshold) {
+	cost_t dij(int s, int t, cost_t threshold) {
 		memset(vis, 0, sizeof(vis));
 		memset(f, 0x3f, sizeof(f));
 		f[s] = 0;
@@ -238,23 +239,24 @@ struct graph_manageer {
 	}
 
 	void baoli(Answer& final_ans) {
-		int lst;
+		unsigned long long lst = global_rd();
+		// cerr << "lst = " << lst << '\n';
 		cost_t ans = BIGCOST;
 		int best_channel;
 		for (auto &bs: businesses) {
 			ans = BIGCOST;
 
-			int bg = lst + rand();
-			for (int j=0; j<min(P, 50); j++) {
-				int c = (bg + j) % P;
-				cost_t tem = gr[c].bfs_least_new_edge(bs.s, bs.t, ans);
+			unsigned int c = lst % P;
+			for (int j=0; j<min(P, 60); j++) {
+				cost_t tem = gr[c].dij(bs.s, bs.t, ans);
 				if (tem < ans) {
 					ans = tem;
 					best_channel = c;
 				}
+				c = (c+1 == (unsigned int)P) ? 0 : c+1;
 			}
 
-			lst = ans%P;
+			lst = lst + ans;
 			Modify(gr[best_channel].occupied, gr[best_channel].trace, bs.s, bs.t, final_ans);
 			final_ans.add_trace(bs.id, best_channel, gr[best_channel].trace);
 		}
@@ -292,9 +294,6 @@ void Input() {
 }
 
 int main() {
-	srand(233);
-	cout << rand();
-	return 0;
     Input();
 
 	Answer final_ans;
