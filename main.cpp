@@ -169,7 +169,7 @@ struct graph {
 			return f > rhs.f;
 		}
 	};
-	cost_t dij(int s, int t, cost_t threshold) {
+	cost_t dijkstra(int s, int t, cost_t threshold) {
 		memset(vis, 0, sizeof(vis));
 		memset(f, 0x3f, sizeof(f));
 		f[s] = 0;
@@ -247,8 +247,8 @@ struct graph_manageer {
 			ans = BIGCOST;
 
 			unsigned int c = lst % P;
-			for (int j=0; j<min(P, 60); j++) {
-				cost_t tem = gr[c].dij(bs.s, bs.t, ans);
+			for (int j=0; j<min(P, 20); j++) {
+				cost_t tem = gr[c].dijkstra(bs.s, bs.t, ans);
 				if (tem < ans) {
 					ans = tem;
 					best_channel = c;
