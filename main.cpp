@@ -135,7 +135,7 @@ struct graph {
 	vector<trace_entry>trace;
 	// 只能加边 不能删边
 	vector<bool>occupied;
-	vector<vector<dir_edge> >des;
+	static vector<vector<dir_edge> >des;
 	int origin_edges_num;
 	struct dir_edge {
 		int to, d, id;
@@ -150,13 +150,17 @@ struct graph {
 		origin_edges_num = m;
 		
 		trace.resize(n);
-		des.clear();
-		des.resize(n);
+
+		if (channel_id == 0) {
+			des.clear();
+			des.resize(n);
+			for (auto &e: edges)
+				add_edge(e.s, e.t, e.d, e.id);
+		}
+
 		occupied.clear();
 		occupied.resize(m);
 
-		for (auto &e: edges)
-			add_edge(e.s, e.t, e.d, e.id);
 	}
 	
 	bool vis[MAXN];
@@ -169,6 +173,7 @@ struct graph {
 			return f > rhs.f;
 		}
 	};
+
 	cost_t dijkstra(int s, int t, cost_t threshold) {
 		memset(vis, 0, sizeof(vis));
 		memset(f, 0x3f, sizeof(f));
@@ -184,7 +189,6 @@ struct graph {
 			if (f[v] > threshold) continue;
 			for (auto &e: des[v]) {
 				int to = e.to;
-				// cout << "to = " << to << ' ' << vis[to] << ' ' << f[v] << ' ' << f[to] << '\n';
 				if (vis[to]) continue ;
 				cost_t val = f[v] + e.d + (occupied[e.id] == 1) * NEW_EDGE_COST;
 				if (val < f[to]) {
@@ -196,7 +200,31 @@ struct graph {
 		}
 		return f[t];
 	}
+
+
+	int new_edges[MAXN];
+	void bfs_least_new_edges(int s, int t) {
+		static queue<int>q[MAXN];
+		memset(new_edges, 0x3f, sizeof(new_edges));
+		new_edges[s] = 0;
+		q[0].push(s);
+		for(int idx=0; !q[idx].empty(); idx++) {
+			while (!q[idx].empty()) {
+				int v = q[idx].front();
+				q[idx].pop();
+				if (new_edges[v] != idx || new_edges[v] > new_edges[t]) continue ;
+				for (auto &e: des[v]) {
+					int to = e.to;
+					if (f[v] + (occupied[e.id] == 1) < f[to]) {
+						f[to] = f[v] + (occupied[e.id] == 1);
+						q[f[to]].push(to);
+					}
+				}
+			}
+		}
+	}
 };
+vector<vector<graph::dir_edge> > graph::des;
 
 struct graph_manageer {
 	graph gr[MAXP];
@@ -213,8 +241,9 @@ struct graph_manageer {
 
 	int add_edge_for_all_graph(int s, int t, int d, Answer &ans) {
 		int id = edges.size();
+		
+		gr[0].add_edge(s, t, d, id);
 		for (int i=0; i<P; i++) {
-			gr[i].add_edge(s, t, d, id);
 			gr[i].occupied.push_back(0);
 		}
 		edges.push_back(edge(s, t, d, id));
@@ -238,9 +267,9 @@ struct graph_manageer {
 		}
 	}
 
-	void baoli(Answer& final_ans) {
+	void two_steps(Answer& final_ans) {
+		vector<int>rest_business;
 		unsigned long long lst = global_rd();
-		// cerr << "lst = " << lst << '\n';
 		cost_t ans = BIGCOST;
 		int best_channel;
 		for (auto &bs: businesses) {
@@ -255,13 +284,20 @@ struct graph_manageer {
 				}
 				c = (c+1 == (unsigned int)P) ? 0 : c+1;
 			}
-
-			lst = lst + ans;
-			Modify(gr[best_channel].occupied, gr[best_channel].trace, bs.s, bs.t, final_ans);
-			final_ans.add_trace(bs.id, best_channel, gr[best_channel].trace);
+			if (ans < NEW_EDGE_COST) {
+				lst = lst + ans;
+				Modify(gr[best_channel].occupied, gr[best_channel].trace, bs.s, bs.t, final_ans);
+				final_ans.add_trace(bs.id, best_channel, gr[best_channel].trace);
+			} else {
+				rest_business.push_back(bs.id);
+			}
+		}
+		for (auto &res: rest_business) {
+			auto &bs = businesses[res];
+			
 		}
 	}
-
+	void baoli(Answer& final_ans);
 }gm;
 
 void Input() {
@@ -284,7 +320,31 @@ int main() {
 	Answer final_ans;
 	gm.init();
 	gm.baoli(final_ans);
-
+	// gm.two_steps(final_ans);
 	final_ans.Print();
     return 0;
+}
+
+void graph_manageer::baoli(Answer& final_ans) {
+	unsigned long long lst = global_rd();
+	// cerr << "lst = " << lst << '\n';
+	cost_t ans = BIGCOST;
+	int best_channel;
+	for (auto &bs: businesses) {
+		ans = BIGCOST;
+
+		unsigned int c = lst % P;
+		for (int j=0; j<min(P, 5); j++) {
+			cost_t tem = gr[c].dijkstra(bs.s, bs.t, ans);
+			if (tem < ans) {
+				ans = tem;
+				best_channel = c;
+			}
+			c = (c+1 == (unsigned int)P) ? 0 : c+1;
+		}
+
+		lst = lst + ans;
+		Modify(gr[best_channel].occupied, gr[best_channel].trace, bs.s, bs.t, final_ans);
+		final_ans.add_trace(bs.id, best_channel, gr[best_channel].trace);
+	}
 }
