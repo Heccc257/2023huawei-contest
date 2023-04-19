@@ -132,9 +132,18 @@ struct Context {
 struct graph {
 	struct dir_edge;
 	int channel_id;
+
+	// 每个图单独一个trace，跑完dij之后trace会存每个点
+	// 的最短路来源，根据这个来将边删除
 	vector<trace_entry>trace;
+
+	// 表示某条边被占了
 	// 只能加边 不能删边
 	vector<bool>occupied;
+
+	// 无相边拆成两条有向边
+	// 因为所有图的边都是一样的，所以用static存
+	// 要加边也直接加
 	static vector<vector<dir_edge> >des;
 	int origin_edges_num;
 	struct dir_edge {
@@ -224,6 +233,7 @@ struct graph {
 		}
 	}
 };
+
 vector<vector<graph::dir_edge> > graph::des;
 
 struct graph_manageer {
