@@ -124,11 +124,6 @@ struct Answer {
 	}
 };
 
-
-struct Context {
-
-};
-
 struct graph {
 	struct dir_edge;
 	int channel_id;
