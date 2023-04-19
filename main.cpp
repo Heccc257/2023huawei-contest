@@ -330,11 +330,13 @@ void graph_manageer::baoli(Answer& final_ans) {
 	// cerr << "lst = " << lst << '\n';
 	cost_t ans = BIGCOST;
 	int best_channel;
+
+	// 当时可有调到40,
+	int max_epoches = 5;
 	for (auto &bs: businesses) {
 		ans = BIGCOST;
-
 		unsigned int c = lst % P;
-		for (int j=0; j<min(P, 5); j++) {
+		for (int j=0; j<min(P, max_epoches); j++) {
 			cost_t tem = gr[c].dijkstra(bs.s, bs.t, ans);
 			if (tem < ans) {
 				ans = tem;
