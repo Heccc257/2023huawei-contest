@@ -139,6 +139,9 @@ struct graph {
 	// 无相边拆成两条有向边
 	// 因为所有图的边都是一样的，所以用static存
 	// 要加边也直接加
+	
+	// TODO 加边似乎可以不用真的插入一条新的边，而是
+	// 给原有的边增加一个类似于生命值属性
 	static vector<vector<dir_edge> >des;
 	int origin_edges_num;
 	struct dir_edge {
